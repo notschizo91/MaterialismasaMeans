@@ -137,8 +137,15 @@ let private rebuildMeshes () =
                 match ringsBounds blobCache with
                 | Some (minX, minY, _, maxY) -> { X = minX - rOuter * 0.35; Y = (minY + maxY) / 2.0 }
                 | None -> { X = 0.0; Y = 0.0 }
-        let withRing = Clipper.combine blobCache [| circleRing ringCenterActual rOuter |] "union"
-        let basePaths = Clipper.combine withRing [| circleRing ringCenterActual (holeSize / 2.0) |] "difference"
+        // Build the keyring as a solid annulus FIRST, then union it into the
+        // blob: the hole only exists where the ring sticks out, so it can
+        // never cut into the name.
+        let annulus =
+            Clipper.combine
+                [| circleRing ringCenterActual rOuter |]
+                [| circleRing ringCenterActual (holeSize / 2.0) |]
+                "difference"
+        let basePaths = Clipper.combine blobCache annulus "union"
         let baseShapes = Clipper.toShapes basePaths
 
         let basePos = ResizeArray<float>()
@@ -409,6 +416,11 @@ let private init () =
     (byId "export-separate").addEventListener ("click", fun _ -> exportSeparate ())
 
     (byId "char-count").textContent <- sprintf "%d/15 characters" text.Length
+
+    // Test hook: deterministic keyring placement for the e2e suite.
+    window?__setRing <- (fun (p: obj) ->
+        ringPos <- Some { X = p?x; Y = p?y }
+        rebuildMeshes ())
 
     // Bundled default font so the app works with zero setup.
     thenDo (TextShapes.loadDefaultFont ()) (fun font ->

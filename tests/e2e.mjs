@@ -147,6 +147,21 @@ try {
   // The keyring sticks out left of the text blob: base must be wider than text.
   check(base.minX < text.minX - 2, `keyring extends left of the text (base minX ${base.minX.toFixed(1)} vs text ${text.minX.toFixed(1)})`);
 
+  // The keyring must never cut into the name: park the ring dead-center on
+  // the text — the hole is fully swallowed, so the base collapses to exactly
+  // the blob (no ring sticking out, nothing carved away).
+  await page.evaluate(() => window.__setRing({ x: 0, y: 0 }));
+  await page.waitForTimeout(200);
+  const swallowed = parseStl((await download('#export-combined')).buf);
+  check(swallowed.badEdges === 0, 'ring-over-text export still watertight');
+  check(
+    Math.abs(swallowed.minX - (text.minX - 3)) < 1.0,
+    `hole does not cut the blob: base edge = text edge + border (${swallowed.minX.toFixed(1)} vs ${(text.minX - 3).toFixed(1)})`
+  );
+  // Put the ring back on the left edge for the remaining checks.
+  await page.evaluate(() => window.__setRing({ x: -44, y: 0 }));
+  await page.waitForTimeout(200);
+
   // Settings affect the model: raise base height, shrink border.
   await page.fill('#base-h', '6');
   await page.dispatchEvent('#base-h', 'input');
