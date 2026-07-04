@@ -158,6 +158,18 @@ try {
     Math.abs(swallowed.minX - (text.minX - 3)) < 1.0,
     `hole does not cut the blob: base edge = text edge + border (${swallowed.minX.toFixed(1)} vs ${(text.minX - 3).toFixed(1)})`
   );
+  // Keyring toggle off = plain nameplate: base collapses to exactly the blob.
+  await page.uncheck('#ring-enabled');
+  await page.waitForTimeout(250);
+  const nameplate = parseStl((await download('#export-combined')).buf);
+  check(nameplate.badEdges === 0, 'nameplate (keyring off) export watertight');
+  check(
+    Math.abs(nameplate.minX - swallowed.minX) < 1e-3,
+    `keyring toggle off gives a plain nameplate (minX ${nameplate.minX.toFixed(1)})`
+  );
+  await page.check('#ring-enabled');
+  await page.waitForTimeout(250);
+
   // Put the ring back on the left edge for the remaining checks.
   await page.evaluate(() => window.__setRing({ x: -44, y: 0 }));
   await page.waitForTimeout(200);

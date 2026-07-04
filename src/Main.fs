@@ -41,6 +41,7 @@ let mutable private letterSpacing = 0.5
 let mutable private wordGap = 1.0
 let mutable private border = 3.0
 let mutable private holeFill = 2.0
+let mutable private ringEnabled = true
 let mutable private holeSize = 5.0 // keyring hole diameter
 let mutable private ringThick = 3.0
 let mutable private baseH = 3.0
@@ -140,13 +141,17 @@ let private rebuildMeshes () =
                 | None -> { X = 0.0; Y = 0.0 }
         // Build the keyring as a solid annulus FIRST, then union it into the
         // blob: the hole only exists where the ring sticks out, so it can
-        // never cut into the name.
-        let annulus =
-            Clipper.combine
-                [| circleRing ringCenterActual rOuter |]
-                [| circleRing ringCenterActual (holeSize / 2.0) |]
-                "difference"
-        let basePaths = Clipper.combine blobCache annulus "union"
+        // never cut into the name. With the keyring off, the base is just
+        // the blob — a plain nameplate.
+        let basePaths =
+            if not ringEnabled then blobCache
+            else
+                let annulus =
+                    Clipper.combine
+                        [| circleRing ringCenterActual rOuter |]
+                        [| circleRing ringCenterActual (holeSize / 2.0) |]
+                        "difference"
+                Clipper.combine blobCache annulus "union"
         let baseShapes = Clipper.toShapes basePaths
 
         let basePos = ResizeArray<float>()
@@ -308,7 +313,7 @@ let private init () =
     Viewer.setRingDrag
         viewer
         (fun () ->
-            if blobCache.Length = 0 then null
+            if blobCache.Length = 0 || not ringEnabled then null
             else createObj [ "X" ==> ringCenterActual.X; "Y" ==> ringCenterActual.Y; "R" ==> (holeSize / 2.0 + ringThick) ])
         (fun p ->
             ringPos <- Some { X = p?x; Y = p?y }
@@ -379,6 +384,16 @@ let private init () =
             if not (isNull viewer) then Viewer.setColor viewer "text" textColor
     )
 
+    // Keyring on/off: off = plain nameplate.
+    let ringCheck = inputById "ring-enabled"
+    ringCheck.addEventListener (
+        "change",
+        fun _ ->
+            ringEnabled <- ringCheck.``checked``
+            (byId "ring-controls").classList.toggle ("off", not ringEnabled) |> ignore
+            scheduleMeshes ()
+    )
+
     // Sliders. Text-affecting ones re-run layout; the rest only re-mesh.
     let mm v = sprintf "%.1f mm" v
     bindSlider "size" mm (fun v -> sizeMm <- v; scheduleText ())
@@ -398,6 +413,9 @@ let private init () =
             for (id, v) in defaults do
                 (inputById id).value <- v
             ringPos <- None
+            ringEnabled <- true
+            (inputById "ring-enabled").``checked`` <- true
+            (byId "ring-controls").classList.remove "off"
             sizeMm <- 20.0
             border <- 3.0
             letterSpacing <- 0.5

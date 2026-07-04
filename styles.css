@@ -288,6 +288,35 @@ input[type="color"] {
   cursor: pointer;
 }
 
+/* ---------- toggle ---------- */
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.toggle-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-secondary);
+  cursor: pointer;
+}
+
+.hint-inline {
+  color: var(--text-secondary);
+  font-style: normal;
+  font-size: 10.5px;
+}
+
+#ring-controls.off {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 /* ---------- sliders ---------- */
 
 .slider-field {
