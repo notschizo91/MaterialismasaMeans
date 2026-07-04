@@ -138,7 +138,9 @@ try {
   const base = parseStl(named['KAI JO-base.stl']);
   const text = parseStl(named['KAI JO-text.stl']);
   check(Math.abs(base.maxZ - 3) < 1e-3 && Math.abs(base.minZ) < 1e-4, `base spans 0..3mm (${base.minZ}..${base.maxZ})`);
-  check(Math.abs(text.minZ - 3) < 1e-3 && Math.abs(text.maxZ - 5) < 1e-3, `text spans 3..5mm (${text.minZ}..${text.maxZ})`);
+  // Text is sunk 0.2mm into the base so the solids genuinely overlap
+  // (coincident faces cause slicer artifacts).
+  check(Math.abs(text.minZ - 2.8) < 1e-3 && Math.abs(text.maxZ - 5) < 1e-3, `text spans 2.8..5mm, 0.2mm sunk into the base (${text.minZ}..${text.maxZ})`);
   check(base.badEdges === 0 && text.badEdges === 0, 'both separate STLs watertight');
   check(
     Math.abs(base.volume + text.volume - c.volume) < 1,

@@ -161,10 +161,14 @@ let private rebuildMeshes () =
         basePositions <- basePos.ToArray()
 
         if textH >= 0.05 then
+            // Sink the text slightly into the base: exactly-coincident faces
+            // (text bottom == base top) make slicers produce gaps and chewed
+            // edges around the letters; a real overlap slices cleanly.
+            let sink = min 0.2 (baseH / 2.0)
             let textPos = ResizeArray<float>()
             for s in glyphShapesCache do
-                let p, _ = Geometry.extrude s textH
-                textPos.AddRange (Geometry.translateZ baseH p)
+                let p, _ = Geometry.extrude s (textH + sink)
+                textPos.AddRange (Geometry.translateZ (baseH - sink) p)
             textPositions <- textPos.ToArray()
         else
             textPositions <- [||]
@@ -199,8 +203,13 @@ let private rebuildText () =
                     { GShapes = TextShapes.glyphShapes glyphTol holeFill (g?commands)
                       WordBreak = g?wordBreak })
             // Optical spacing: the slider is the true outline-to-outline gap,
-            // independent of the font's (often unreliable) metrics.
-            let raw = TextShapes.layoutOptical letterSpacing (spaceAdv * wordGap) glyphIns
+            // independent of the font's (often unreliable) metrics. Then union
+            // everything: script fonts build glyphs from overlapping strokes
+            // and connected letters overlap each other — overlapping shells in
+            // one STL solid make slicers misbehave, a single clean solid not.
+            let raw =
+                TextShapes.layoutOptical letterSpacing (spaceAdv * wordGap) glyphIns
+                |> Clipper.unionShapes
             // Center on the origin and flip from font space (y-down) to y-up.
             let shapes =
                 match Geometry.bounds raw with
