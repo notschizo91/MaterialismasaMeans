@@ -22,27 +22,29 @@ export function fontName(font) {
 }
 
 /**
- * Lay out `text` along a baseline at y=0.
- * Returns one command list (opentype path commands, mm units, y-down) per
- * visible glyph.
+ * Extract glyph outlines for `text`, each at its own origin (x=0, baseline
+ * y=0, mm units, y-down). Horizontal placement happens on the F# side with
+ * *optical* spacing — measured from the real outlines — because font advance
+ * widths and kerning tables are unreliable in decorative fonts and produce
+ * uneven gaps.
+ *
+ * Returns { glyphs: [{ commands, wordBreak }], spaceAdv } where wordBreak
+ * marks glyphs preceded by whitespace and spaceAdv is the space width in mm.
  */
-export function layoutText(font, text, sizeMm, letterSpacingMm, wordGapMul) {
+export function layoutText(font, text, sizeMm) {
   const scale = sizeMm / font.unitsPerEm;
-  let x = 0;
-  let prev = null;
   const glyphs = [];
+  let pendingBreak = false;
   for (const ch of text) {
     const glyph = font.charToGlyph(ch);
-    if (prev) x += font.getKerningValue(prev, glyph) * scale;
-    const adv = glyph.advanceWidth * scale;
     if (/\s/.test(ch)) {
-      x += adv * wordGapMul + letterSpacingMm;
-      prev = null;
+      pendingBreak = true;
       continue;
     }
-    glyphs.push(glyph.getPath(x, 0, sizeMm).commands);
-    x += adv + letterSpacingMm;
-    prev = glyph;
+    glyphs.push({ commands: glyph.getPath(0, 0, sizeMm).commands, wordBreak: pendingBreak });
+    pendingBreak = false;
   }
-  return glyphs;
+  const space = font.charToGlyph(' ');
+  const spaceAdv = (space && space.advanceWidth ? space.advanceWidth : font.unitsPerEm * 0.3) * scale;
+  return { glyphs, spaceAdv };
 }

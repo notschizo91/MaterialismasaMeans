@@ -6,6 +6,7 @@ open Fable.Core.JsInterop
 open Browser.Dom
 open Browser.Types
 open SvgExtrude.Types
+open SvgExtrude.TextShapes
 
 [<Emit("parseFloat($0)")>]
 let private parseFloatJs (s: string) : float = jsNative
@@ -183,11 +184,18 @@ let private rebuildText () =
             blobCache <- [||]
             rebuildMeshes ()
         else
-            let glyphCmds = TextShapes.layoutText font trimmed sizeMm letterSpacing wordGap
-            let raw =
-                glyphCmds
+            let layout = TextShapes.layoutText font trimmed sizeMm
+            let glyphArr: obj array = layout?glyphs
+            let spaceAdv: float = layout?spaceAdv
+            let glyphIns: TextShapes.GlyphIn list =
+                glyphArr
                 |> Array.toList
-                |> List.collect (TextShapes.glyphShapes glyphTol holeFill)
+                |> List.map (fun g ->
+                    { GShapes = TextShapes.glyphShapes glyphTol holeFill (g?commands)
+                      WordBreak = g?wordBreak })
+            // Optical spacing: the slider is the true outline-to-outline gap,
+            // independent of the font's (often unreliable) metrics.
+            let raw = TextShapes.layoutOptical letterSpacing (spaceAdv * wordGap) glyphIns
             // Center on the origin and flip from font space (y-down) to y-up.
             let shapes =
                 match Geometry.bounds raw with

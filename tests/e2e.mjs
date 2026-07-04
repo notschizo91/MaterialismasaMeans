@@ -176,6 +176,22 @@ try {
   const filled = parseStl((await download('#export-combined')).buf);
   check(filled.volume > taller.volume + 10, `hole fill threshold fills letter holes (${taller.volume.toFixed(0)} -> ${filled.volume.toFixed(0)} mm³)`);
 
+  // Optical letter spacing: widening the gap slider must widen the model by
+  // roughly (n-1) * delta regardless of the font's own metrics. Bury the ring
+  // first so the parked keyring doesn't pin the model bounds.
+  await page.evaluate(() => window.__setRing({ x: 0, y: 0 }));
+  await page.waitForTimeout(250);
+  const beforeSp = parseStl((await download('#export-combined')).buf);
+  await page.fill('#letter-spacing', '3');
+  await page.dispatchEvent('#letter-spacing', 'input');
+  await page.waitForTimeout(350);
+  const spaced = parseStl((await download('#export-combined')).buf);
+  const grown = spaced.maxX - spaced.minX - (beforeSp.maxX - beforeSp.minX);
+  check(
+    grown > 9 && grown < 16,
+    `letter spacing controls the real outline gap (width grew ${grown.toFixed(1)}mm for +2.5mm x 4 gaps)`
+  );
+
   await page.screenshot({ path: path.join(ROOT, 'e2e-screenshot.png') });
   check(pageErrors.length === 0, `no console/page errors${pageErrors.length ? ': ' + pageErrors.join(' | ') : ''}`);
 } finally {
