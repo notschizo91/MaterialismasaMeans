@@ -33,7 +33,7 @@ let build (parts: float array list) : obj =
     let totalTris = parts |> List.sumBy (fun p -> p.Length / 9)
     let buf = newArrayBuffer (84 + 50 * totalTris)
     let dv = newDataView buf
-    let header = "SVG Extrude STL - binary (color is preview-only)"
+    let header = "3DSideHustle Keychain Designer - binary STL (color is preview-only)"
     for k in 0 .. min 79 (header.Length - 1) do
         setU8 dv k (int header.[k])
     setU32 dv 80 (float totalTris)

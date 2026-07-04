@@ -34,7 +34,7 @@ let private inputById (id: string) : HTMLInputElement = byId id :?> HTMLInputEle
 
 let private fonts = ResizeArray<string * obj>()
 let mutable private activeFont: obj option = None
-let mutable private text = "KJ"
+let mutable private text = "NAME"
 let mutable private sizeMm = 20.0
 let mutable private letterSpacing = 0.5
 let mutable private wordGap = 1.0

@@ -46,7 +46,7 @@ page.on('console', (m) => {
   if (m.type() === 'error') pageErrors.push(m.text());
 });
 
-const tmp = mkdtempSync(path.join(os.tmpdir(), 'kj-'));
+const tmp = mkdtempSync(path.join(os.tmpdir(), '3dsh-'));
 
 const parseStl = (buf) => {
   const triCount = buf.readUInt32LE(80);

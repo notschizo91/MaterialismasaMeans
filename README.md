@@ -1,4 +1,4 @@
-# KJ Keychains Designer
+# 3DSideHustle Keychain Designer
 
 Type a name, get a 3D-printable keychain. Live 3D preview, base + raised text
 at independent heights, keyring hole you can drag into position, and binary
