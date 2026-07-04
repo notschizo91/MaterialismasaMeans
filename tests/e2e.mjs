@@ -202,8 +202,8 @@ try {
   const spaced = parseStl((await download('#export-combined')).buf);
   const grown = spaced.maxX - spaced.minX - (beforeSp.maxX - beforeSp.minX);
   check(
-    grown > 9 && grown < 16,
-    `letter spacing controls the real outline gap (width grew ${grown.toFixed(1)}mm for +2.5mm x 4 gaps)`
+    grown > 10 && grown < 15,
+    `letter spacing controls the real outline gap (width grew ${grown.toFixed(1)}mm for +3mm x 4 gaps)`
   );
 
   await page.screenshot({ path: path.join(ROOT, 'e2e-screenshot.png') });

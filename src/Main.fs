@@ -37,7 +37,7 @@ let private fonts = ResizeArray<string * obj>()
 let mutable private activeFont: obj option = None
 let mutable private text = "NAME"
 let mutable private sizeMm = 20.0
-let mutable private letterSpacing = 0.5
+let mutable private letterSpacing = 0.0
 let mutable private wordGap = 1.0
 let mutable private border = 3.0
 let mutable private holeFill = 2.0
@@ -311,7 +311,7 @@ let private bindSlider (id: string) (fmt: float -> string) (apply: float -> unit
     update ()
 
 let private defaults = [
-    "size", "20"; "border", "3"; "letter-spacing", "0.5"; "word-gap", "1"
+    "size", "20"; "border", "3"; "letter-spacing", "0"; "word-gap", "1"
     "hole-fill", "2"; "hole-size", "5"; "ring-thick", "3"; "base-h", "3"; "text-h", "2" ]
 
 let private init () =
@@ -427,7 +427,7 @@ let private init () =
             (byId "ring-controls").classList.remove "off"
             sizeMm <- 20.0
             border <- 3.0
-            letterSpacing <- 0.5
+            letterSpacing <- 0.0
             wordGap <- 1.0
             holeFill <- 2.0
             holeSize <- 5.0
